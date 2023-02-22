@@ -70,7 +70,6 @@ describe('GET /api/articles', () => {
     })
     });
 
-
 describe('GET /api/articles/:article_id', () => {
     test('responds with a 200 status code', () => {
         return request(app)
@@ -84,7 +83,6 @@ describe('GET /api/articles/:article_id', () => {
         .then(res => {
             
             for (let i = 0; i < res.body.article.length; i++) {
-                console.log(res.body.article)
                 expect(res.body.article).toBeInstanceOf(Object);
                 expect(res.body.article).not.toBeEmpty();
                 expect(res.body.article).toMatchObject({
@@ -101,6 +99,34 @@ describe('GET /api/articles/:article_id', () => {
     })
 })
 
+describe('GET /api/articles/:article_id', () => {
+    test('responds with a 200 status code', () => {
+        return request(app)
+        .get('/api/articles/1')
+        .expect(200)
+    })
+    test('get /api/articles/:article_id request responds with an array of comments objects with the correct properties', () => {
+        return request(app)
+        .get('/api/articles/1/comments')
+        .expect(200)
+        .then(res => {
+            expect(res.body.comments).toBeInstanceOf(Array);
+            expect(res.body.comments).not.toBeEmpty();
+            expect(res.body.comments.length).toBe(11)
+            for (let i = 0; i < res.body.comments.length; i++) {
+                expect(res.body.comments[i]).toBeInstanceOf(Object);
+                expect(res.body.comments[i]).not.toBeEmpty();
+                expect(res.body.comments[i]).toMatchObject({
+                comment_id: expect.any(Number),
+                votes: expect.any(Number),
+                created_at: expect.any(String),
+                author: expect.any(String),
+                body: expect.any(String),
+                article_id: expect.any(Number)})
+            }
+        })
+    })
+})
 
 describe('error handling', () => {
     test('responds with a 404 status code when given an invalid path', () => {
@@ -131,3 +157,34 @@ describe('error handling', () => {
         })
     })
 })
+
+describe('error handling', () => {
+    test('responds with a 404 status code when given an invalid path', () => {
+        return request(app)
+        .get('/api/invalid-path')
+        .expect(404)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Not found');
+        })
+    })
+    test('responds with a 400 status code when given an invalid perameter', () => {
+        return request(app)
+        .get('/api/articles/:999999')
+        .expect(400)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Bad request');
+        })
+    })
+    test('responds with a 404 along without a no article found message when given an invalid article id', () => {
+        return request(app)
+        .get('/api/articles/:article_id/string')
+        .expect(404)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Not found');
+        })
+    })
+})
+

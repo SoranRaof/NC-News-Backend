@@ -40,7 +40,6 @@ const fetchArticleById = (article_id) => {
     )
     .then(result => {
         const article = result.rows;
-        //console.log(article, "articlemodel")
         if (article.length === 0) {
             return Promise.reject({ status: 404, msg: 'Article not found' })
         }
@@ -48,4 +47,25 @@ const fetchArticleById = (article_id) => {
     })
 }
 
-module.exports = { fetchTopics, fetchArticles, fetchArticleById };
+const fetchCommentsByArticleId = (article_id) => {
+    return db.query(
+        `SELECT comments.comment_id,
+        comments.votes,
+        comments.created_at,
+        comments.author,
+        comments.body,
+        comments.article_id
+        FROM comments
+        WHERE comments.article_id = $1
+        ORDER BY comments.created_at DESC`, [article_id]
+    )
+    .then(result => {
+        const comments = result.rows;
+        if (comments.length === 0) {
+            return Promise.reject({ status: 404, msg: 'Comments not found' })
+        }
+        return comments
+    })
+}
+
+module.exports = { fetchTopics, fetchArticles, fetchArticleById, fetchCommentsByArticleId };
