@@ -347,14 +347,15 @@ describe('PATCH error handling', () => {
             expect(msg).toBe('Article not found');
         })
     })
-    test('responds with a 404 status code when given a non existent article id', () => {
+    test('if inc_votes is not included in the request body, responds with a 200 and the unchanged article', () => {
         return request(app)
-        .patch('/api/articles/999999')
-        .send({ inc_votes: 1 })
-        .expect(404)
+        .patch('/api/articles/1')
+        .send({ comment_id: 1 })
+        .expect(200)
         .then(res => {
-            const { msg } = res.body;
-            expect(msg).toBe('Article not found');
+            expect(res.body.article).toMatchObject({
+                votes: 100
+            })
         })
     })
     test('ignores irrelevant properties in the request body', () => { 
