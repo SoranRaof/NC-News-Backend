@@ -1,5 +1,5 @@
 const app = require('../app');
-const { fetchArticles, fetchArticleById, fetchCommentsByArticleId } = require('../models/model.js');
+const { fetchArticles, fetchArticleById, fetchCommentsByArticleId, insertCommentByArticleId } = require('../models/model.js');
 const { handleServerErrors, handleCustomErrors, handlePSQLErrors } = require('./error-handling-controller')
 
 const getArticles = (req, res, next) => {
@@ -35,4 +35,16 @@ const getCommentsByArticleId = (req, res, next) => {
     })
 }
 
-module.exports = { getArticles, getArticleById, getCommentsByArticleId };
+const postCommentByArticleId = (req, res, next) => {
+    const { article_id } = req.params;
+    const { username, body } = req.body;
+    insertCommentByArticleId(article_id, username, body)
+    .then((comment) => {
+        res.status(201).send({ comment })
+    })
+    .catch((err) => {
+        next(err)
+    })
+}
+
+module.exports = { getArticles, getArticleById, getCommentsByArticleId, postCommentByArticleId };

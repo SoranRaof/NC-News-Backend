@@ -128,6 +128,29 @@ describe('GET /api/articles/:article_id', () => {
     })
 })
 
+describe('POST /api/articles/:article_id/comments', () => {
+    test('responds with a 201 status code and posted comment', () => {
+        const newComment = {
+            username: 'butter_bridge',
+            body: 'This is a new comment'
+        }
+        return request(app)
+        .post('/api/articles/1/comments')
+        .send(newComment)
+        .expect(201)
+        .then(res => {
+            expect(res.body.comment).toMatchObject({
+                comment_id: expect.any(Number),
+                body: 'This is a new comment',
+                article_id: 1,
+                author: 'butter_bridge',
+                votes: expect.any(Number),
+                created_at: expect.any(String)
+            })
+        })
+    })
+})
+
 describe('error handling', () => {
     test('responds with a 404 status code when given an invalid path', () => {
         return request(app)
@@ -188,3 +211,95 @@ describe('error handling', () => {
     })
 })
 
+describe('error handling', () => {
+test('responds with a 400 status code when given an invalid perameter', () => {
+    const newComment = {
+        username: 'butter_bridge',
+        body: 'This is a new comment'
+    }
+    return request(app)
+    .post('/api/articles/string/comments')
+    .send(newComment)
+    .expect(400)
+    .then(res => {
+        const { msg } = res.body;
+        expect(msg).toBe('Bad request');
+    })
+})
+test('responds with a 404 status code when given an invalid article id', () => {
+    const newComment = {
+        username: 'butter_bridge',
+        body: 'This is a new comment'
+    }
+    return request(app)
+    .post('/api/articles/999999/comments')
+    .send(newComment)
+    .expect(404)
+    .then(res => {
+        const { msg } = res.body;
+        expect(msg).toBe('Article not found');
+    })
+})
+test('responds with a 404 status code when given an invalid username', () => {
+    const newComment = {
+        username: 'invalid_username',
+        body: 'This is a new comment'
+    }
+    return request(app)
+    .post('/api/articles/1/comments')
+    .send(newComment)
+    .expect(404)
+    .then(res => {
+        const { msg } = res.body;
+        expect(msg).toBe('User not found');
+    })
+})
+test('responds with a 400 status code when given an invalid body', () => {
+    const newComment = {
+        username: 'butter_bridge',
+        body: ''
+    }
+    return request(app)
+    .post('/api/articles/1/comments')
+    .send(newComment)
+    .expect(400)
+    .then(res => {
+        const { msg } = res.body;
+        expect(msg).toBe('Both username and body are required');
+    })
+})
+test('sad path test for when username or body properties are missing entirely', () => {
+    const newComment = {
+        username: 'butter_bridge',
+    }
+    return request(app)
+    .post('/api/articles/1/comments')
+    .send(newComment)
+    .expect(400)
+    .then(res => {
+        const { msg } = res.body;
+        expect(msg).toBe('Both username and body are required');
+    })
+})
+test('ignore extra properties with a status 201', () => {
+    const newComment = {
+        username: 'butter_bridge',
+        body: 'This is a new comment',
+        extraProperty: 'extra'
+    }
+    return request(app)
+    .post('/api/articles/1/comments')
+    .send(newComment)
+    .expect(201)
+    .then(res => {
+        expect(res.body.comment).toMatchObject({
+            comment_id: expect.any(Number),
+            body: 'This is a new comment',  
+            article_id: 1,
+            author: 'butter_bridge',
+            votes: expect.any(Number),
+            created_at: expect.any(String)
+        })
+    })
+})
+})

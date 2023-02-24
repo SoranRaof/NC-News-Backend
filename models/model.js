@@ -68,4 +68,45 @@ const fetchCommentsByArticleId = (article_id) => {
     })
 }
 
-module.exports = { fetchTopics, fetchArticles, fetchArticleById, fetchCommentsByArticleId };
+const insertCommentByArticleId = (article_id, username, body) => {
+    if (!username || !body) {
+      return Promise.reject({ status: 400, msg: 'Both username and body are required' })
+    }
+    return db.query(
+      `SELECT * FROM articles WHERE article_id = $1`,
+      [article_id]
+    )
+    .then(articleResult => {
+      const article = articleResult.rows;
+      if (article.length === 0) {
+        return Promise.reject({ status: 404, msg: 'Article not found' })
+      }
+      else {
+      return db.query(
+        `SELECT * FROM users WHERE username = $1`,
+        [username]
+      )
+      .then(userResult => {
+        const user = userResult.rows;
+        if (user.length === 0) {
+          return Promise.reject({ status: 404, msg: 'User not found' })
+        } 
+        else {
+        return db.query(
+          `INSERT INTO comments (body, author, article_id)
+          VALUES ($1, $2, $3)
+          RETURNING *`,
+          [body, username, article_id]
+        )
+        .then(commentResult => {
+            const comment = commentResult.rows;
+            return comment[0]
+          })
+          }
+        })
+        }
+    })
+  }
+  
+
+module.exports = { fetchTopics, fetchArticles, fetchArticleById, fetchCommentsByArticleId, insertCommentByArticleId };
