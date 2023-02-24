@@ -11,11 +11,11 @@ This database will be PSQL, we will interact with it using [node-postgres]
 ## .env.development
 
 ```
-PGDATABASE=nc_news
+PGDATABASE=nc_news;
 ```
 
 ## .env.test
 
 ```
-PGDATABASE=nc_news_test
+PGDATABASE=nc_news_test;
 ```
