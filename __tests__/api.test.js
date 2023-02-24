@@ -151,6 +151,28 @@ describe('POST /api/articles/:article_id/comments', () => {
     })
 })
 
+describe('PATCH /api/articles/:article_id', () => {
+    test('responds with a 200 status code and updated article', () => {
+        const votes = {
+            inc_votes: 1
+        }
+        return request(app)
+        .patch('/api/articles/1')
+        .send(votes)
+        .expect(200)
+        .then(res => {
+            expect(res.body.article).toMatchObject({
+                article_id: 1,
+                title: expect.any(String),
+                body: expect.any(String),
+                votes: 101,
+                topic: expect.any(String)
+            })
+        })
+    })
+})
+
+
 describe('error handling', () => {
     test('responds with a 404 status code when given an invalid path', () => {
         return request(app)
@@ -292,14 +314,44 @@ test('ignore extra properties with a status 201', () => {
     .send(newComment)
     .expect(201)
     .then(res => {
-        expect(res.body.comment).toMatchObject({
-            comment_id: expect.any(Number),
-            body: 'This is a new comment',  
-            article_id: 1,
-            author: 'butter_bridge',
-            votes: expect.any(Number),
-            created_at: expect.any(String)
+            expect(res.body.comment).toMatchObject({
+                comment_id: expect.any(Number),
+                body: 'This is a new comment',  
+                article_id: 1,
+                author: 'butter_bridge',
+                votes: expect.any(Number),
+                created_at: expect.any(String)
+            })
         })
     })
 })
+
+describe('error handling', () => {
+    test('responds with a 404 status code when given an invalid path', () => {
+        return request(app)
+        .get('/api/invalid-path')
+        .expect(404)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Not found');
+        })
+    })
+    test('responds with a 400 status code when given an invalid perameter', () => {
+        return request(app)
+        .get('/api/articles/string')
+        .expect(400)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Bad request');
+        })
+    })
+    test('responds with a 404 along without a no article found message when given an invalid article id', () => {
+        return request(app)
+        .get('/api/articles/999999')
+        .expect(404)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Article not found');
+        })
+    })
 })

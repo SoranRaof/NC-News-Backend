@@ -107,6 +107,23 @@ const insertCommentByArticleId = (article_id, username, body) => {
         }
     })
   }
+
+const updateArticleVotes = (article_id, inc_votes = 0) => {
+    return db.query(
+        `UPDATE articles
+        SET votes = votes + $1
+        WHERE article_id = $2
+        RETURNING *`, [inc_votes, article_id]
+    )
+    .then(result => {
+        const article = result.rows;
+        if (article.length === 0) {
+            return Promise.reject({ status: 404, msg: 'Article not found' })
+        }
+        return article[0]
+    })
+}
+
   
 
-module.exports = { fetchTopics, fetchArticles, fetchArticleById, fetchCommentsByArticleId, insertCommentByArticleId };
+module.exports = { fetchTopics, fetchArticles, fetchArticleById, fetchCommentsByArticleId, insertCommentByArticleId, updateArticleVotes };
