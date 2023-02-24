@@ -354,4 +354,14 @@ describe('error handling', () => {
             expect(msg).toBe('Article not found');
         })
     })
+    test('responds with a 400 when passed a invalid data type', () => {
+        return request(app)
+        .patch('/api/articles/1')
+        .send({ inc_votes: 'string' })
+        .expect(400)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Bad request');
+        })
+    })
 })
