@@ -268,4 +268,38 @@ test('responds with a 400 status code when given an invalid body', () => {
         expect(msg).toBe('Both username and body are required');
     })
 })
+test('sad path test for when username or body properties are missing entirely', () => {
+    const newComment = {
+        username: 'butter_bridge',
+    }
+    return request(app)
+    .post('/api/articles/1/comments')
+    .send(newComment)
+    .expect(400)
+    .then(res => {
+        const { msg } = res.body;
+        expect(msg).toBe('Both username and body are required');
+    })
+})
+test('ignore extra properties with a status 201', () => {
+    const newComment = {
+        username: 'butter_bridge',
+        body: 'This is a new comment',
+        extraProperty: 'extra'
+    }
+    return request(app)
+    .post('/api/articles/1/comments')
+    .send(newComment)
+    .expect(201)
+    .then(res => {
+        expect(res.body.comment).toMatchObject({
+            comment_id: expect.any(Number),
+            body: 'This is a new comment',  
+            article_id: 1,
+            author: 'butter_bridge',
+            votes: expect.any(Number),
+            created_at: expect.any(String)
+        })
+    })
+})
 })
