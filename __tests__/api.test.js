@@ -326,42 +326,46 @@ test('ignore extra properties with a status 201', () => {
     })
 })
 
-describe('error handling', () => {
-    test('responds with a 404 status code when given an invalid path', () => {
+describe('PATCH error handling', () => {
+    test('responds with a 400 when passed a invalid data type', () => {
         return request(app)
-        .get('/api/invalid-path')
-        .expect(404)
-        .then(res => {
-            const { msg } = res.body;
-            expect(msg).toBe('Not found');
-        })
-    })
-    test('responds with a 400 status code when given an invalid perameter', () => {
-        return request(app)
-        .get('/api/articles/string')
+        .patch('/api/articles/string')
+        .send({ inc_votes: 1 })
         .expect(400)
         .then(res => {
             const { msg } = res.body;
             expect(msg).toBe('Bad request');
         })
     })
-    test('responds with a 404 along without a no article found message when given an invalid article id', () => {
+    test('responds with a 404 status code when given an invalid ID', () => {
         return request(app)
-        .get('/api/articles/999999')
+        .patch('/api/articles/99999999')
+        .send({ inc_votes: 1 })
         .expect(404)
         .then(res => {
             const { msg } = res.body;
             expect(msg).toBe('Article not found');
         })
     })
-    test('responds with a 400 when passed a invalid data type', () => {
+    test('responds with a 404 status code when given a non existent article id', () => {
         return request(app)
-        .patch('/api/articles/1')
-        .send({ inc_votes: 'string' })
-        .expect(400)
+        .patch('/api/articles/999999')
+        .send({ inc_votes: 1 })
+        .expect(404)
         .then(res => {
             const { msg } = res.body;
-            expect(msg).toBe('Bad request');
+            expect(msg).toBe('Article not found');
         })
     })
+    test('ignores irrelevant properties in the request body', () => { 
+        return request(app)
+        .patch('/api/articles/1')
+        .send({ inc_votes: 1, comment_id: 1 })
+        .expect(200)
+        .then(res => {
+            expect(res.body.article).toMatchObject({
+                votes: 101
+        })
+    })
+})
 })
