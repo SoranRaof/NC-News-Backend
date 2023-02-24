@@ -151,6 +151,28 @@ describe('POST /api/articles/:article_id/comments', () => {
     })
 })
 
+describe('PATCH /api/articles/:article_id', () => {
+    test('responds with a 200 status code and updated article', () => {
+        const votes = {
+            inc_votes: 1
+        }
+        return request(app)
+        .patch('/api/articles/1')
+        .send(votes)
+        .expect(200)
+        .then(res => {
+            expect(res.body.article).toMatchObject({
+                article_id: 1,
+                title: expect.any(String),
+                body: expect.any(String),
+                votes: 101,
+                topic: expect.any(String)
+            })
+        })
+    })
+})
+
+
 describe('error handling', () => {
     test('responds with a 404 status code when given an invalid path', () => {
         return request(app)
@@ -292,13 +314,58 @@ test('ignore extra properties with a status 201', () => {
     .send(newComment)
     .expect(201)
     .then(res => {
-        expect(res.body.comment).toMatchObject({
-            comment_id: expect.any(Number),
-            body: 'This is a new comment',  
-            article_id: 1,
-            author: 'butter_bridge',
-            votes: expect.any(Number),
-            created_at: expect.any(String)
+            expect(res.body.comment).toMatchObject({
+                comment_id: expect.any(Number),
+                body: 'This is a new comment',  
+                article_id: 1,
+                author: 'butter_bridge',
+                votes: expect.any(Number),
+                created_at: expect.any(String)
+            })
+        })
+    })
+})
+
+describe('PATCH error handling', () => {
+    test('responds with a 400 when passed a invalid data type', () => {
+        return request(app)
+        .patch('/api/articles/string')
+        .send({ inc_votes: 1 })
+        .expect(400)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Bad request');
+        })
+    })
+    test('responds with a 404 status code when given an invalid ID', () => {
+        return request(app)
+        .patch('/api/articles/99999999')
+        .send({ inc_votes: 1 })
+        .expect(404)
+        .then(res => {
+            const { msg } = res.body;
+            expect(msg).toBe('Article not found');
+        })
+    })
+    test('if inc_votes is not included in the request body, responds with a 200 and the unchanged article', () => {
+        return request(app)
+        .patch('/api/articles/1')
+        .send({ comment_id: 1 })
+        .expect(200)
+        .then(res => {
+            expect(res.body.article).toMatchObject({
+                votes: 100
+            })
+        })
+    })
+    test('ignores irrelevant properties in the request body', () => { 
+        return request(app)
+        .patch('/api/articles/1')
+        .send({ inc_votes: 1, comment_id: 1 })
+        .expect(200)
+        .then(res => {
+            expect(res.body.article).toMatchObject({
+                votes: 101
         })
     })
 })
